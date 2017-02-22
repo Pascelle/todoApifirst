@@ -56,7 +56,10 @@ app.post('/todos', (req, res) => {
 });
 
 app.listen(3000, () => {
-	console.log('Started on port 3000');
+	//console.log('Started on port 3000');
 });
 
 //above creates a very basic server
+
+module.exports = {app};
+//setting it equal to an obj and on that obj we set the app property equal to the app variable
