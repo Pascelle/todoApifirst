@@ -7,10 +7,20 @@ const request = require('supertest');
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
 
+//an array of objects
+const todos = [{
+	text: 'First test todo'
+}, {
+	text: 'Second test todo'
+}];
 //we need the beforeEach because we have existing docs in the database already, but below in the expect statements we act as if there is nothing in there.  this fcn is going to get called with a done argument and run before every test case and will only going to move on to the test case once we call done which means we can do something async inside of it. which means we can remove all of our todos before moving on to the next test case.
 beforeEach((done) => {
-		Todo.remove({}).then(() => done());
+	Todo.remove({}).then(() => {
+		return Todo.insertMany(todos);
+		//by returning this response we are able to chain callbacks
+	}).then(() => done());
 });
+//insertMany takes an array and inserts 
 
 describe('POST /todos', () => {
 	it('should create a new todo', (done) => {
@@ -32,7 +42,8 @@ describe('POST /todos', () => {
 					if(err) {
 						return done(err);
 					}
-					Todo.find().then((todos) => {
+					Todo.find({text}).then((todos) => {
+					//only find text that equals the text above (in the var text)
 						expect(todos.length).toBe(1);
 						expect(todos[0].text).toBe(text);
 						done();
@@ -58,11 +69,23 @@ describe('POST /todos', () => {
 				}
 			//fetching all todos from the db to make some assertions
 			Todo.find().then((todos) => {
-				expect(todos.length).toBe(0);
+				expect(todos.length).toBe(2);
 				done();
 			}).catch((e) => done(e));
 	});
 
+	});
+});
+
+describe('GET /todos', () => {
+	it('should get all todos', (done) => {
+		request(app)
+		.get('/todos')
+		.expect(200)
+		.expect((res) => {
+			expect(res.body.todos.length).toBe(2);
+		})
+		.end(done);
 	});
 });
 
