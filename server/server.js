@@ -55,8 +55,18 @@ app.post('/todos', (req, res) => {
 	
 });
 
+//the get route is the route you use to get all of your todos
+app.get('/todos', (req, res) => {
+	Todo.find().then((todos) => {
+		res.send({todos});
+		//when you have an array, you don't want to just pass in the array itself because you may want to add on later and that is hard when you just pass in the array.  Instead create an object and on that obj specify todos, setting it equal to the todos array using ES6
+	}), (e) => {
+		res.status(400).send(e);
+	}
+})
+
 app.listen(3000, () => {
-	//console.log('Started on port 3000');
+	console.log('Started on port 3000');
 });
 
 //above creates a very basic server
