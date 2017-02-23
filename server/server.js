@@ -72,7 +72,7 @@ app.get('/todos', (req, res) => {
 
 //how to fetch a variable that is passed in via the url, for example getting docs //GET /todos/12323131.  To accomplish this we use a url parameter.  Here it is :id.  The url parameter creates an id variable that is on the request object and we'll be able to access that variable.  Below, when the url is requested, the callback is fired and we'll be able to query by the id they pass in
 app.get('/todos/:id', (req, res) => {
-	//user enters url, last part, the id gets filled into the request object.  we can access it using req.params.id
+	//user enters url, last part, the id gets filled into the request object.  we can access it using req.params.id (below)
 	var id = req.params.id;
 	//validate the id
 	if (!ObjectID.isValid(id)) {
@@ -89,8 +89,8 @@ app.get('/todos/:id', (req, res) => {
 		//took off  at the end bc it was too long in the terminal
 	}
 	 res.send({todo});
-}).catch((e) => console.log(res.status(400).send('Bad Request')));
-	//this is some other error	
+	}).catch((e) => console.log(res.status(400).send('Bad Request')));
+		//this is some other error	
 });
 	//res.send(req.params); 
 	//req.params is an obj that has key-value pairs where the key is the url param (like id) and the value is what actual  value is put there.  Here we are asking the response.send method to send back the request.params object.  This is going to let us test out the route inside of postman and see exactly how it works
@@ -99,6 +99,27 @@ app.listen(port, () => {
 });
 
 //above creates a very basic server
+
+//to create a delete route:
+app.delete('/todos/:id', (req, res) => {
+	//the url is the doc that the user wants to delete
+	
+	//get the id off of the request obj
+	var id = req.params.id;
+	//validate the id
+	if (!ObjectID.isValid(id)) {
+		return console.log(res.status(404).send());
+	}
+	//if ID is valid, remove it
+	Todo.findByIdAndRemove(id).then((todo) => { 
+		//if no doc comes back then nothing was deleted, so doc was not found
+		if (!todo) {
+			return console.log(res.status(404).send());
+		}
+		res.status(200).send(todo);
+	}).catch((e) => {console.log(res.status(400).send())});
+	
+});
 
 module.exports = {app};
 //setting it equal to an obj and on that obj we set the app property equal to the app variable
