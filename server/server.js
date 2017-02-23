@@ -22,6 +22,9 @@ const {ObjectID} = require('mongodb');
 var app = express();
 //this stores our express application, equal to a call to express
 
+const port = process.env.PORT || 3000;
+//this is the var that may or may not be set.  It will be set if the app is running on heroku.  3000 is the local port if the port isn't otherwise defined.  
+
 //below establishes the post route which lets us create basic to dos. When you want to create a resource you use the post http method and you send that resource as the body.  This means that when we want to make a new todo we send a JSON object over to the server it is going to have a text property, the server is goign to get that text property, create the new model and send the complete model with the ID, the completed property and completedat back to the client.  
 //below we are getting the body data that got sent from the client using the bodyParser module
 app.use(bodyParser.json());
@@ -91,8 +94,8 @@ app.get('/todos/:id', (req, res) => {
 });
 	//res.send(req.params); 
 	//req.params is an obj that has key-value pairs where the key is the url param (like id) and the value is what actual  value is put there.  Here we are asking the response.send method to send back the request.params object.  This is going to let us test out the route inside of postman and see exactly how it works
-app.listen(3000, () => {
-	console.log('Started on port 3000');
+app.listen(port, () => {
+	console.log(`Started up at port ${port}``);
 });
 
 //above creates a very basic server
