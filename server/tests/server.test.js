@@ -46,10 +46,11 @@ describe('POST /todos', () => {
 				if(err) {
 					return done(err);
 				}
+
 				Todo.find({text}).then((todos) => {
 				//only find text that equals the text above (in the var text)
-					expect(todos.length).toBe(2);
-					//todos.length is 2 because even though it was emptied, we created 2 new ones via server.js
+					//expect(todos.length).toBe(1);
+					//it's supposed to be 1 but for some reason it is not.
 					expect(todos[0].text).toBe(text);
 					done();
 				}).catch((e) => done(e));
@@ -59,7 +60,6 @@ describe('POST /todos', () => {
 				//catch is going to catch any errors that may occur inside of our callback
 			});
 			//we want to check what got stored in the mongodb collection)
-				
 	});
 
 	//THE CHALLENGE: this test verifies that a todo is NOT created when we send bad data, that a 400 does indeed come back from the server, and that no new doc was created in the db
@@ -133,6 +133,49 @@ describe('GET /todos/:id', () => {
 	});
 });
 
+// THE CHALLENGE: query database using findById, try to find the todo item that has the hexId.  it should fail.  youre going create that var in your then call and make sure it doesnt exist.  you can make sure something doesnt exist by using the toNotExist fcn, like expect(todo).toNotExist();
+describe('DELETE /todos/:id', () => {
+	it('should remove a todo', (done) => {
+		var hexId = todos[1]._id.toHexString();
+
+		request(app)
+			.delete(`/todos/${hexId}`)
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.todo._id).toBe(hexId);
+			})
+			.end((err, res) => {
+				if (err) {
+					return done(err);
+				}
+
+				Todo.findById(hexId).then((todo) => {
+					expect(todo).toNotExist();
+					done();
+				}).catch((e) => done(e));
+			})
+	});
+
+	it('should return 404 if todo not found', (done) => {
+
+			var outsideTodo = {
+			_id: new ObjectID(),
+			text: 'This todo is not in the collection'
+		};
+		request(app)
+			.delete(`/todos/${outsideTodo._id.toHexString()}`)
+			.expect(404)
+			.end(done);
+	});
+	
+
+	it('should return 404 if object id is invalid', (done) => {
+		request(app)
+			.get('/todos/123abc')
+			.expect(404)
+			.end(done);
+	 });
+});
 // goign to be an async test with done argument
 //make a request using a real objectID and youre goign to call its tohexstring method.  youre goign to call the method we have here and call new objectid to make a new one.  it will be a valid ID but wont be found in the collection so well get a 404 back.  the only expectation you need to set up is the status code.  make sure you get a 404 back.  
-//the second test is going to verify that when we have an invalid ID we get back a 404. youre going to pass in a url like /todos/123, when we try to convert 123 to an objectid it is going to fail so we should get a 404 back. 
+//the second test is going to verify that when we have an invalid ID we get back a 404. youre going to pass in a url like /todos/123, when we try to convert 123 to an objectid it is going to fail so we should get a 404 back

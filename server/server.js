@@ -89,6 +89,7 @@ app.get('/todos/:id', (req, res) => {
 		//took off  at the end bc it was too long in the terminal
 	}
 	 res.send({todo});
+	 //sends an object, the response body, with a todo property
 	}).catch((e) => console.log(res.status(400).send('Bad Request')));
 		//this is some other error	
 });
@@ -108,18 +109,19 @@ app.delete('/todos/:id', (req, res) => {
 	var id = req.params.id;
 	//validate the id
 	if (!ObjectID.isValid(id)) {
-		return console.log(res.status(404).send());
+		return res.status(404).send();
 	}
 	//if ID is valid, remove it
 	Todo.findByIdAndRemove(id).then((todo) => { 
 		//if no doc comes back then nothing was deleted, so doc was not found
 		if (!todo) {
-			return console.log(res.status(404).send());
+			return res.status(404).send();
 		}
-		res.status(200).send(todo);
-	}).catch((e) => {console.log(res.status(400).send())});
+		res.status(200).send({todo});
+		 //send({todo}) sends an object, the response body, with a todo property
+	}).catch((e) => {res.status(400).send()});
 	
 });
 
 module.exports = {app};
-//setting it equal to an obj and on that obj we set the app property equal to the app variable
+//setting it equal to an obj and on that obj we set the app property equal to the app variable.
