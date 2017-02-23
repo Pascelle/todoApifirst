@@ -95,7 +95,7 @@ app.get('/todos/:id', (req, res) => {
 	//res.send(req.params); 
 	//req.params is an obj that has key-value pairs where the key is the url param (like id) and the value is what actual  value is put there.  Here we are asking the response.send method to send back the request.params object.  This is going to let us test out the route inside of postman and see exactly how it works
 app.listen(port, () => {
-	console.log(`Started up at port ${port}``);
+	console.log(`Started up at port ${port}`);
 });
 
 //above creates a very basic server
