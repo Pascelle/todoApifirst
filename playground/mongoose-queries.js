@@ -8,7 +8,7 @@ const {mongoose} = require('./../server/db/mongoose');
 const {Todo} = require('./../server/models/todo');
 const {User} = require('./../server/models/user');
 
-var id = '58adf502db1bbb3de816dd1211';
+var id = '58adf502db1bbb3de816dd12';
 
 if (!ObjectID.isValid(id)) {
 	console.log('ID not valid');
@@ -51,3 +51,5 @@ User.findById(id).then((user) => {
 	//if the user was found, print it to the screen
 }).catch((e) => console.log(e));
 //this is if there is some other error.
+
+
