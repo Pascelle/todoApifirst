@@ -5,10 +5,13 @@
 //the server.js file is just responsnible for our routes.
 
 //we access the mongoose property via ES6 destructuring.  We create a local var called mongoose equal to the mongoose property on the obj, and that obj is going to be the return result from requiring the file we created (mongoose.js)
-var express = require('express');
-var bodyParser = require('body-parser');
+
+const _ = require('lodash');
+const express = require('express');
+const bodyParser = require('body-parser');
 //var called bodyParser, setting it equal to the return result of requiring body-parser
 //The body parser module lets us send JSON to the server.  The server can then take that JSON and do something with it. Body parser essentially parses the body.  It takes the string body and turns it into a JS object.
+const {ObjectID} = require('mongodb');
 
 // KEEP LOCAL AND LIBRARY IMPORTS SEPARATE
 
@@ -17,7 +20,7 @@ var {mongoose} = require('./db/mongoose');
 //load in todo and user
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
-const {ObjectID} = require('mongodb');
+
 
 var app = express();
 //this stores our express application, equal to a call to express
@@ -95,11 +98,7 @@ app.get('/todos/:id', (req, res) => {
 });
 	//res.send(req.params); 
 	//req.params is an obj that has key-value pairs where the key is the url param (like id) and the value is what actual  value is put there.  Here we are asking the response.send method to send back the request.params object.  This is going to let us test out the route inside of postman and see exactly how it works
-app.listen(port, () => {
-	console.log(`Started up at port ${port}`);
-});
 
-//above creates a very basic server
 
 //to create a delete route:
 app.delete('/todos/:id', (req, res) => {
@@ -123,5 +122,53 @@ app.delete('/todos/:id', (req, res) => {
 	
 });
 
+//We use the http patch method (what you use when you want to update a resource) to add the new route.
+	//STEP 1: create a body var, it has a subset of the things the user passed to us.  we dont want the user to update whatever they want
+	//STEP 2: We update the completedat property based off of the completed property and 
+	//STEP 3: Make our call with findbyid and update
+
+app.patch('/todos/:id', (req, res) => {
+	var id = req.params.id;
+	var body = _.pick(req.body, ['text', 'completed']);
+	//this is why we need lodash.  the request body is where the updates will be stored. if you want to set a todos text to something else, you would make a patch request, you would set the text property equal to what you want the todo text to be.  the problem is that people can send along properties we don't want them to update or don't even exist. in order to only pull of the properties we want users to be able to edit we use _.pick.  it takes an object, we pass in req.body and then it takes an array of properties you want to pull off, if they exist.  those are the only two properties a user will be able to update
+
+	if (!ObjectID.isValid(id)) {
+		return res.status(404).send();
+	}
+
+	//checking the completed value and using that value to set completedat
+	if (_.isBoolean(body.completed) && body.completed) {
+		//if it is a boolean AND it is true, run fcn
+		body.completedAt = new Date().getTime();
+
+	} else {
+		body.completed = false;
+		body.completedAt = null;
+		//when you want to remove a value from a database, you just set it to null
+	}
+
+	//query to update the db
+	Todo.findByIdAndUpdate(id, 
+		//have to use mongodb operators
+		{$set: body}, 
+		 //this is the body var we set up above
+		 {new: true}
+			//options that let you tweak how fcn works.  this one tells you to give back the updated obj not the old one
+		).then((todo) => {
+			if (!todo) {
+				return res.status(404).send();
+			}
+
+			res.send({todo});
+		}).catch((e) => {
+			res.status(400).send();
+		})
+});
+
+app.listen(port, () => {
+	console.log(`Started up at port ${port}`);
+});
+
+//above creates a very basic server
 module.exports = {app};
 //setting it equal to an obj and on that obj we set the app property equal to the app variable.
