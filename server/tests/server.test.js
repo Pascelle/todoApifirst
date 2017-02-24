@@ -14,7 +14,9 @@ const todos = [{
 	text: 'First test todo'
 }, {
 	_id: new ObjectID(),
-	text: 'Second test todo'
+	text: 'Second test todo',
+	completed: true,
+	completedAt: 333
 }];
 //we need the beforeEach because we have existing docs in the database already, but below in the expect statements we act as if there is nothing in there.  this fcn is going to get called with a done argument and run before every test case and will only move on to the next test case once we call done which means we can do something async inside of it. which means we can remove all of our todos before moving on to the next test case.
 beforeEach((done) => {
@@ -176,6 +178,69 @@ describe('DELETE /todos/:id', () => {
 			.end(done);
 	 });
 });
+
+		/*/CHALLENGE INSTRUCTIONS /*/
+		//grab ID of first item
+		//make patch request, provide the proper url with the id inside of it, use send to send some data along as the request body.  update text to something else, set completed equal to true
+		//assert that you get 200
+		//custom assertion will verify that the response body has a text property equal to the text i sent in, verify that completed is true, verify that completedAt is a number, use the toBeA method inside of expect to get that done
+
+describe('PATCH /todos/:id', () => {
+	it('should update the todo', (done) => {
+		var hexId = todos[0]._id.toHexString();
+		//
+		var text = 'This should be the new text';
+
+		request(app)
+			.patch(`/todos/${hexId}`)
+			.send({
+				completed: true,
+				text: text
+			})
+
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.todo.text).toBe(text);
+				expect(res.body.todo.completed).toBe(true);
+				expect(res.body.todo.completedAt).toBeA('number');
+			})
+			.end(done);
+	});
+
+			/*/SECOND CHALLENGE INSTRUCTIONS /*/
+			//grab ID of second todo item
+			//update text to something different, set completed to false
+			//make assertions, 200, check that text was changed, check that completed is false, and that completedAt is null.  can use the toNotExist method available on expect to make that assertion.
+	it('should clear completedAt when todo is not completed', (done) => {
+		var hexId = todos[1]._id.toHexString();
+		//
+		var text = 'This should be the new text!!!!';
+
+		request(app)
+			.patch(`/todos/${hexId}`)
+			.send({
+				completed: false,
+				text: text
+			})
+
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.todo.text).toBe(text);
+				expect(res.body.todo.completed).toBe(false);
+				expect(res.body.todo.completedAt).toNotExist();
+			})
+			.end(done);
+	});
+});
+
+
+
+
+
+
+
+
+
 // goign to be an async test with done argument
 //make a request using a real objectID and youre goign to call its tohexstring method.  youre goign to call the method we have here and call new objectid to make a new one.  it will be a valid ID but wont be found in the collection so well get a 404 back.  the only expectation you need to set up is the status code.  make sure you get a 404 back.  
 //the second test is going to verify that when we have an invalid ID we get back a 404. youre going to pass in a url like /todos/123, when we try to convert 123 to an objectid it is going to fail so we should get a 404 back
