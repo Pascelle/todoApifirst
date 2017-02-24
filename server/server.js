@@ -6,6 +6,20 @@
 
 //we access the mongoose property via ES6 destructuring.  We create a local var called mongoose equal to the mongoose property on the obj, and that obj is going to be the return result from requiring the file we created (mongoose.js)
 
+var env = process.env.NODE_ENV || 'development';
+console.log('env *******', env);
+//environment variable.  If we're on production or test, node_env will be set, but if we're on development (running the app locally) node_env will not be used
+
+if (env === 'development') {
+// if we're on development, we want to set up the mongoDB url
+process.env.PORT = 3000;
+process.env.MONGODB_URI = 'mongodb://localhost:27017/TodoApp';
+} else if (env === 'test') {
+//if it is the test environment, we want a custom db url
+process.env.PORT = 3000;
+process.env.MONGODB_URI = 'mongodb://localhost:27017/TodoAppTest';
+}
+
 const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -25,7 +39,7 @@ var {User} = require('./models/user');
 var app = express();
 //this stores our express application, equal to a call to express
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 //this is the var that may or may not be set.  It will be set if the app is running on heroku.  3000 is the local port if the port isn't otherwise defined.  
 
 //below establishes the post route which lets us create basic to dos. When you want to create a resource you use the post http method and you send that resource as the body.  This means that when we want to make a new todo we send a JSON object over to the server it is going to have a text property, the server is goign to get that text property, create the new model and send the complete model with the ID, the completed property and completedat back to the client.  
