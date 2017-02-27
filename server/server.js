@@ -6,20 +6,7 @@
 
 //we access the mongoose property via ES6 destructuring.  We create a local var called mongoose equal to the mongoose property on the obj, and that obj is going to be the return result from requiring the file we created (mongoose.js)
 
-var env = process.env.NODE_ENV || 'development';
-console.log('env *******', env);
-//environment variable.  If we're on production or test, node_env will be set, but if we're on development (running the app locally) node_env will not be used
-
-if (env === 'development') {
-// if we're on development, we want to set up the mongoDB url
-process.env.PORT = 3000;
-process.env.MONGODB_URI = 'mongodb://localhost:27017/TodoApp';
-} else if (env === 'test') {
-//if it is the test environment, we want a custom db url
-process.env.PORT = 3000;
-process.env.MONGODB_URI = 'mongodb://localhost:27017/TodoAppTest';
-}
-
+require('./config/config');
 const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -144,7 +131,7 @@ app.delete('/todos/:id', (req, res) => {
 app.patch('/todos/:id', (req, res) => {
 	var id = req.params.id;
 	var body = _.pick(req.body, ['text', 'completed']);
-	//this is why we need lodash.  the request body is where the updates will be stored. if you want to set a todos text to something else, you would make a patch request, you would set the text property equal to what you want the todo text to be.  the problem is that people can send along properties we don't want them to update or don't even exist. in order to only pull of the properties we want users to be able to edit we use _.pick.  it takes an object, we pass in req.body and then it takes an array of properties you want to pull off, if they exist.  those are the only two properties a user will be able to update
+	//this is why we need lodash.  the request body is where the updates will be stored. if you want to set a todos text to something else, you would make a patch request, you would set the text property equal to what you want the todo text to be.  the problem is that people can send along properties we don't want them to update or don't even exist. in order to only pull off the properties we want users to be able to edit we use _.pick.  it takes an object, we pass in req.body (which is the body of the existing todo) and then it takes an array of properties you want to pull off, if they exist.  those are the only two properties a user will be able to update
 
 	if (!ObjectID.isValid(id)) {
 		return res.status(404).send();
@@ -177,6 +164,32 @@ app.patch('/todos/:id', (req, res) => {
 		}).catch((e) => {
 			res.status(400).send();
 		})
+});
+
+//POST /users
+//both the signup and login express route handlers are going to require the code to create the auth token.  
+app.post('/users', (req, res) => {
+
+	var body = _.pick(req.body, ['email', 'password']);
+	//req.body bc the body is the user model, which is what is being requested of in a request when the app.post is called. 
+	//the property we peel off from the user model, which we get bc it is stored in the body variable via the _.pick method (from lodash, represented by the _) above which takes only the properties from the user model object that we want the user to be able to modify
+	var user = new User(body);
+		
+		//at first we want to pass in an object with the email and password property.  we could recreate an object, setting the email property equal to body email, but we already have that in body, so we can just pass in body.  there is no reason to pass in an object that we create when we already have the object we need.  The body will at most contain the email and password bc we picked them off, if any of them are missing like the email is not provided, it won't be in the body either, so the validation will fail, so we don't need to worry about creating the object manually. 
+		//{ email: body.email,
+		// body: body.password }
+		 
+	user.save().then(() => {
+		// res.send(user);
+		//instead of responding we call user.generateAuthToken, which we chain on a then call because user.save over in user.js had the token returned to it so we can chain on here, then we return user.generateAuthToken so we can tack on another then call, and this second then call is called with the token value (so basically by returning token in user.js we can pass it on over here, and keep passing it)
+		return user.generateAuthToken();
+		//if we don't return it we can't use its properties later on
+	}).then((token) => {
+		res.header('x-auth', token).send(user);
+		//we want to send back the token as an http response header.  header takes two arguments, a key:value pair.  When you use x prefix in a header you are creating a custom header, which means it isn't a header http supports by default, it's a header you are using for a specific purpose.  here we are using a jwt token scheme so we're creating a header to store that value.
+	}).catch((e) => {
+		res.status(400).send(e);
+	})
 });
 
 app.listen(port, () => {
