@@ -39,6 +39,16 @@ var UserSchema = new mongoose.Schema({
   }]
 });
 
+//this determines what happens when a mongoose model is converted into a JSON value.
+UserSchema.methods.toJSON = function (){
+  var user = this;
+  var userObject = user.toObject();
+  //responsible for taking your mongoose var, user, and converting it into a regular obj where only the properties available on the document exist
+
+  return _.pick(userObject, ['_id', 'email']);
+};
+
+
 //this stores the schema for a user, which is all of the properties defined in var user.  We need schema in order to tack on the custom methods
 
 UserSchema.methods.generateAuthToken = function () {
