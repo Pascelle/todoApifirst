@@ -71,6 +71,35 @@ UserSchema.methods.generateAuthToken = function () {
 //this creates a method.  Userschema.methods is an object and on this object we can add any method we like---these are our instance methods.  These instance methods have access to the original document created
 //cannot use an arrow function here bc arrow fcns do not bind a this keyword.  we need a this keyword for our methods bc the this keyword stores the individual document
 
+UserSchema.statics.findByToken = function (token) {
+  //verifying the token
+  var User = this;
+  //model methods get called with the model as the this binding.
+  var decoded;
+  //creating an defined var bc the JWT.verify fcn is going to throw an error if anything goes wrong (the secret doesn't match or if the token value was manipulated)
+
+  try {
+    decoded = jwt.verify(token, 'abc123');
+  } catch (e) {
+   // return a promise that is always going to reject
+   return Promise.reject();
+
+   //  return new Promise((resolve, reject) => {
+   //    reject()});
+      // we can simplify this (see above): 
+      // reject() means that this promise will get returned to findByToken.  Then over inside of server.js findByToken will be rejected so our "then" success case will never fire.  The catch callback in server.js will fire though
+    
+  }
+  //with try catch, the code runs in the try block, if something goes wrong there it runs the code in the catch block
+
+  return User.findOne({
+    '_id': decoded._id,
+    'tokens.token': token,
+    'tokens.access': 'auth'
+  });
+  //if we're able to verify then fine the users that match
+};
+
 var User = mongoose.model('User', UserSchema);
 //we gave User all of its old functionality by passing in UserSchema
   // Name: {

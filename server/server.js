@@ -21,6 +21,7 @@ var {mongoose} = require('./db/mongoose');
 //load in todo and user
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
+var {authenticate} = require('./middleware/authenticate');
 
 
 var app = express();
@@ -191,6 +192,33 @@ app.post('/users', (req, res) => {
 		res.status(400).send(e);
 	})
 });
+
+//this is the get route for fetching the currently authenticated user.  When the token gets processed, it properly calls the actual route handler, we get the request user and we send it back.  If the token is a bad value we get the errors.
+//this route will require authentication (require the x auth token), find the associated user and send the user back
+app.get('/users/me', authenticate, (req, res) => { 
+	res.send(req.user);
+});
+	//to access the middleware you reference the fcn "authenticate"
+	// var token = req.header('x-auth');
+	// //req.header fetches the value, x-auth is the key
+
+	// //verifying the token, fetch the user and do something with it.  This is the model method.  It takes the token value and finds the appropriate user related to that token, returning it inside of the promise callbacks.  That means we'll be able to do something with the doc of the user associated with the token
+	// User.findByToken(token).then((user) => {
+	// 	//this corresponds with UserSchema.statics.findByToken in user.js
+	// 	if (!user) {
+	// 		//this is in the case of a valid token but for some reason we can't find the user
+
+	// 		//instead of res.status(401).send(); we write
+	// 		return Promise.reject();
+	// 		//the fcn will automatically stop, so res.status(401) doesn't execute we're going to run the error case and send back a 401, which is what we want.
+	// 	}
+	// 	res.send(user);
+	// }).catch((e) => {
+	// 	res.status(401).send();
+	// 	//send back a 401 status-- auth is required
+	// });
+
+
 
 app.listen(port, () => {
 	console.log(`Started up at port ${port}`);
