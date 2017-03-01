@@ -7,6 +7,7 @@ const {ObjectID} = require('mongodb');
 //below creates a local variable called app, we use ES6 destructuring to pull it off of the return result from requiring the server file.  here we're going to start by geting the relative path, then go back one directory from tests into server, then the file name is server without the extension
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
 const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
 //we need the beforeEach because we have existing docs in the database already, but below in the expect statements we act as if there is nothing in there.  this fcn is going to get called with a done argument and run before every test case and will only move on to the next test case once we call done which means we can do something async inside of it. which means we can remove all of our todos before moving on to the next test case.
@@ -268,8 +269,17 @@ describe('POST /users', () => {
 			expect(res.body._id).toExist();
 			expect(res.body.email).toBe(email);
 		})
-		.end(done);
+		.end((err) => {
+			if (err) {
+				return done(err);
+			}
 
+			User.findOne({email}).then((user) => {
+				expect(user).toExist();
+				expect(user.password).toNotBe(password);
+				done();
+			  }).catch((e) => done(e));
+		});
 	}));
 
 	//test what happens when invalid email or PW not at least 6 characters is passed in; user should not be created
@@ -296,6 +306,58 @@ describe('POST /users', () => {
 	}); 
 });
 
+describe('POST /users/login', () => {
+	it('should login user and return auth token', (done) => { //using the second user from the seed.js data
+		request(app)
+		.post('/users/login')
+		.send({
+			email: users[1].email,
+			password: users[1].password
+		})
+		.expect(200)
+		.expect((res) => {
+			expect(res.headers['x-auth']).toExist()
+			//expect that the response header's object has an a-auth token; we're goign to expect this value to exist
+		})
+		.end((err, res) => {
+			if (err) {
+				return done(err);
+			}
+			//this is in the case we DO find a user.  We already know the ID of the user... it's in seed.js "_id: userTwoId".  we grab the user ID and then tack on a then call for when the user query finishes
+			User.findById(users[1]._id).then((user) => {
+				expect(user.tokens[0]).toInclude({
+					access: 'auth',
+					token: res.headers['x-auth']
+				});
+				//we expect that the user has a tokens array and that the first item includes using toInclude the following attributes
+				done();
+			}).catch((e) => done(e));
+		});
+	});
+
+	it('should reject invalid login', (done) => {
+		request(app)
+		.post('/users/login')
+		.send({
+			email: users[1].email,
+			password: users[1].password + '1'
+		})
+		.expect(400)
+		.expect((res) => {
+			expect(res.headers['x-auth']).toNotExist()
+		})
+		.end((err, res) => {
+			if (err) {
+				return done(err);
+			}
+			
+			User.findById(users[1]._id).then((user) => {
+				expect(user.tokens.length).toBe(0);
+				done();
+			}).catch((e) => done(e));
+		});
+	});
+})
 
 
 
