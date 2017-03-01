@@ -1,7 +1,9 @@
+//mongoose middleware lets you run some code beofre or after an event.  Here we want to run code before the doc is saved (the hashed password)
 const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 var UserSchema = new mongoose.Schema({
   email: {
@@ -99,6 +101,29 @@ UserSchema.statics.findByToken = function (token) {
   });
   //if we're able to verify then fine the users that match
 };
+
+UserSchema.pre('save', function (next) {
+//must have next argument, and you must call it or the app will crash
+  var user = this;
+  //gets us access to individual doc
+
+  if (user.isModified('password')) {
+    //the goal here is if the PW is actually modified, then you salt and hash it.  if not you move on.
+
+  //First generate a salt using bcrypt.genSalt().  We will get the salt value, which we pass in as an argument to the callback fcn and then use it to call hash.
+    bcrypt.genSalt(10, (err, salt) => {
+     //plain PW that we have access to via user.password, second argument is salt from the salt var, and the third is the callback fcn where we get the actual hashs value
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        user.password = hash;
+         //remember the user.password property was just equal to the plain text pw so we have to override that in order to properly hide the plain text pw
+        next();
+      });
+    });
+  } else {
+    next();
+  }
+//check if the password was modified.  this is important bc there will be times we save the doc without saving the password, which means the password is already hashed.  we don't want to hash the hash or else the app will break, so we use the user.isModified method to let us know if it was modified.  we only want to encrypt the PW if it was just modified.
+});
 
 var User = mongoose.model('User', UserSchema);
 //we gave User all of its old functionality by passing in UserSchema

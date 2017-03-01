@@ -1,3 +1,9 @@
+//Now that we have one route privatized, we want to break it out into middleware so that all of our rotues can take advatange of it w/o having to run all of the fcn calls
+
+//this is the middleware we will use on our routes to make it private
+
+//with middleware you get three arguments: the request, the response and next.  the actual route is not going to run until next is called inside of the middleware.  
+
 var{User} = require('./../models/user');
 //the variable pulls off user from the return value of require('./../models/user')
 

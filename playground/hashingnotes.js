@@ -38,4 +38,4 @@ var resultHash = SHA256(JSON.stringify(token.data) + 'somesecret').toString();
 
 	//Salt is a random string appended to the end of a user’s password before the password is hashed.  
 
-
+//three parts to a JWT, though we only edit the payload.  The header stores things like the algorithm we used and the type.  The payload has the thing we set and the issued at time stamp.  In the verification that is where the algo is executed and the hash is stored.
