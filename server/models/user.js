@@ -102,6 +102,34 @@ UserSchema.statics.findByToken = function (token) {
   //if we're able to verify then fine the users that match
 };
 
+UserSchema.statics.findByCredentials = function (email, password) {
+  var User = this;
+//find user whose email matches the email var we have passed in as arguments.  Have email passed in as a property of an object.  We return it so that we can chain a promise, to correspond with the User.findByCredentials over in server.js which has a then and catch call
+ return User.findOne({email}).then((user) => {
+  if (!user) {
+    return Promise.reject(); //this lines up with the catch call in server.js
+  }
+
+  return new Promise((resolve, reject) => {
+    //going to compare the user.password property with the password argument passed to the function
+    //if the result is true, you find a user, call resolve with user argument passed into the above fcn
+    //if result is false, you call reject method which triggers the catch case over inside server.js
+
+    bcrypt.compare(password, user.password, (err, res) => {
+      //"password" argument is the plain text password via the password arg up above.  "User.password" is the hashed password, third argument is the callback fcn
+        if (res) {
+          resolve(user);
+          //resolve the promise with the user, which mean swe can do stuff with user over in server.js
+        } else {
+          reject();
+          //reject the promise, sending a 400 black
+        }
+    });
+  })
+ })
+  
+};
+
 UserSchema.pre('save', function (next) {
 //must have next argument, and you must call it or the app will crash
   var user = this;

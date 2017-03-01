@@ -197,7 +197,6 @@ app.post('/users', (req, res) => {
 //this route will require authentication (require the x auth token), find the associated user and send the user back
 app.get('/users/me', authenticate, (req, res) => { 
 	res.send(req.user);
-});
 	//to access the middleware you reference the fcn "authenticate"
 	// var token = req.header('x-auth');
 	// //req.header fetches the value, x-auth is the key
@@ -217,6 +216,26 @@ app.get('/users/me', authenticate, (req, res) => {
 	// 	res.status(401).send();
 	// 	//send back a 401 status-- auth is required
 	// });
+	});
+
+//We're creating a login route so that way if someone loses the token or if they sign in from another device the token will be there.  We are trying to find a user in the mongodb collection that matches the email and has a hashed password that matches the plain text pw when passed through the bcrypt compare method.
+
+app.post('/users/login', (req, res) => {
+	var body = _.pick(req.body, ['email', 'password']);
+
+	User.findByCredentials(body.email, body.password).then((user) => {
+		return user.generateAuthToken().then((token) => {
+			//this generates a token if the user was found from the findByCredential Promise function.  if there's no user the catch case gets fired. Returning this statement keeps the chain alive so that if we do run into any errors into the callback, then 400 will be used as the response
+			res.header('x-auth', token).send(user);
+			//if a user is found, send back the token to the user
+		}); 
+		}).catch((e) => {
+		res.status(400).send();
+	});
+	
+});
+
+
 
 
 
