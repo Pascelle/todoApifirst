@@ -7,25 +7,12 @@ const {ObjectID} = require('mongodb');
 //below creates a local variable called app, we use ES6 destructuring to pull it off of the return result from requiring the server file.  here we're going to start by geting the relative path, then go back one directory from tests into server, then the file name is server without the extension
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
-//an array of objects.  we are using this as our fake collection to test responses
-const todos = [{
-	_id: new ObjectID(),
-	text: 'First test todo'
-}, {
-	_id: new ObjectID(),
-	text: 'Second test todo',
-	completed: true,
-	completedAt: 333
-}];
 //we need the beforeEach because we have existing docs in the database already, but below in the expect statements we act as if there is nothing in there.  this fcn is going to get called with a done argument and run before every test case and will only move on to the next test case once we call done which means we can do something async inside of it. which means we can remove all of our todos before moving on to the next test case.
-beforeEach((done) => {
-	Todo.remove({}).then(() => {
-	//Todo.remove MUST HAPPEN FIRST before the return of todo.insertmany(todos), this is a perfect example of async.  Async - when we need something to happen first, or we need something else to happen while we're waiting on the first thing to finish
-		return Todo.insertMany(todos);
-		//this line says "insert the todos we set up on top so that way the array isnt completely empty; it always starts with 2".  by returning this response the array won't be empty and we are able to chain callbacks
-	}).then(() => done());
-});
+
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 //insertMany takes an array and inserts 
 
 describe('POST /todos', () => {
@@ -233,6 +220,81 @@ describe('PATCH /todos/:id', () => {
 	});
 });
 
+describe('GET /users/me', () => {
+	it('should return user if authenticated', (done) => {
+		request(app)
+		.get('/users/me')
+		.set('x-auth', users[0].tokens[0].token) 
+		//setting a header (name, value)
+		//this is from var users in seed.js
+		.expect(200)
+		.expect((res) => {
+			//when we provide a valid token we want to make sure we get valid data back from the server
+			expect(res.body._id).toBe(users[0]._id.toHexString());
+			//when we fetch a user the id that comes back in the body from the server should be the id of the user whose token we supplied
+			expect(res.body.email).toBe(users[0].email);
+			//comparing email sent back from server to the email contained in the token we sent when we logged in
+		})
+		.end(done);
+	});
+	//CHALLENGE: Make a call to the /users/me route via a GET request, not providing an auth token, just expect to get a 401 back.  Also expect that the body is equal to an empty obj, which it should be if the user is not authenticated.  Make sure to call end passing in done and remember when you're comparing an empty obj to another obj you have to use toequal and not tobe. 
+	it('should return 401 if not authenticated', (done) => {
+		request(app)
+			.get('/users/me')
+			.expect(401)
+			.expect((res) => {
+				expect(res.body).toEqual({})
+			})
+			.end(done);
+	});
+});
+
+//test cases for the sign up route
+describe('POST /users', () => {
+	//test what happens when we pass in a valid unused email and valid PW
+	it('should create a user', (done => {
+		//to make sure email and pw are unique
+		var email = 'example@example.com';
+		var password = '123mnb!';
+
+		request(app)
+		.post('/users')
+		//this will not be dynamic so we can use a regular string as opposed to a template string
+		.send({email, password})
+		.expect(200)
+		.expect((res) => {
+			expect(res.headers['x-auth']).toExist();
+			//we have to use brakcet notiation and not dot notation because our header name is a hyphen in it and you cant do that with dot notation
+			expect(res.body._id).toExist();
+			expect(res.body.email).toBe(email);
+		})
+		.end(done);
+
+	}));
+
+	//test what happens when invalid email or PW not at least 6 characters is passed in; user should not be created
+	it('should return validation errors if request invalid', (done) => {
+		request(app)
+		.post('/users')
+		.send({
+			email: 'and',
+			password: '123'
+		})
+		.expect(400)
+		.end(done);
+	});
+
+	it('should not create user if email in use', (done) => {
+		request(app)
+		.post('/users')
+		.send({
+			email: users[0].email, //this is from seed.js
+			password: 'Password123!'
+		})
+		.expect(400)
+		.end(done);
+	}); 
+});
 
 
 
