@@ -17,7 +17,7 @@ if (!ObjectID.isValid(id)) {
 
 // Todo.find({
 // 	_id: id
-// 	//mongoose will take the string, convert it to an objectID, then it will run the query.  no need to manually convert our string to an objectID
+// 	//mongoose will tak`e the string, convert it to an objectID, then it will run the query.  no need to manually convert our string to an objectID
 // }).then((todos) => {
 // 	//todos will be an array of documents
 // 	console.log('Todos', todos);

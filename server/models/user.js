@@ -59,7 +59,7 @@ UserSchema.methods.generateAuthToken = function () {
   //"this" keyword refers to the document that is being called on when we use an instance method.  for example, in user.generateAuthToken, user is the doc being called on.  Here it is UserSchema.
   var access = 'auth';
   //this links up with the UserSchema.tokens.access property
-  var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString();
+  var token = jwt.sign({_id: user._id.toHexString(), access}, process.env.JWT_SECRET).toString();
   //two arguments with jwt.sign: first is the obj that has the data we want to sign and the second one being a secret value.  eventually the secret is moved into a config var 
   user.tokens.push({access, token});
   //here we update the user tokens array.  tokens is an empty array by default, push lets us add something to that array.  we pass in an object with the vars access and token. this only updates the local user model but we need to save it (below)
@@ -96,7 +96,7 @@ UserSchema.statics.findByToken = function (token) {
   //creating an defined var bc the JWT.verify fcn is going to throw an error if anything goes wrong (the secret doesn't match or if the token value was manipulated)
 
   try {
-    decoded = jwt.verify(token, 'abc123');
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (e) {
    // return a promise that is always going to reject
    return Promise.reject();

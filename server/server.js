@@ -250,7 +250,7 @@ app.delete('/users/me/token', authenticate, (req, res) => {
 
 
 
-
+//we want to make port dynamic so we use a variable. We use an env var that heroku sets.  Heroku will tell your app what port to use because that port will change as you deply your app, so we use an env var so we don't have to swap out our code every time we want to deploy.  With env var, heroku can set a var on the OS your node app can read that var and use it as the port.  Every OS has lots of env var already built in, heroku just adds to it.
 
 
 app.listen(port, () => {
