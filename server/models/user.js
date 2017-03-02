@@ -73,6 +73,21 @@ UserSchema.methods.generateAuthToken = function () {
 //this creates a method.  Userschema.methods is an object and on this object we can add any method we like---these are our instance methods.  These instance methods have access to the original document created
 //cannot use an arrow function here bc arrow fcns do not bind a this keyword.  we need a this keyword for our methods bc the this keyword stores the individual document
 
+UserSchema.methods.removeToken = function (token) {
+//we're going to call our update method to update our array.  we have the array of tokens defined in UserSchema. We want to remove any object from the array that has a token proeprty equal to the value that we pass in.  To do that we use a mongoDB operator called $pull, which lets you remove items from an array that match certain criteria
+
+  var user = this;
+  //WE USE A LOWERCASE user BECAUSE IT IS AN INSTANCE METHOD
+
+  return user.update({
+    $pull: {
+    tokens: {token} // equivalent to token: token
+      
+      //if the token passed in as an argument to the removeToken fcn matches this token, then it will be removed-- not just the token property, but the entire object (the obj with the id, the access property and the token property)
+    }
+  });
+};
+
 UserSchema.statics.findByToken = function (token) {
   //verifying the token
   var User = this;

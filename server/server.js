@@ -235,6 +235,18 @@ app.post('/users/login', (req, res) => {
 	
 });
 
+//log out user by deleting token from currently logged in user.  won't need to pass the token value in via the body or some sort of url parameter, instead we make the route private which means you need to be authenticated in order to ever run the code, and inside of our authentication middleware we store it i req.token = token inside of authenticate.js so we can access the token value if we want to later on
+app.delete('/users/me/token', authenticate, (req, res) => {
+	//to remove the token call instance method
+	//we have access to the user via req.user since the user was authenticated.  We define an instance method called removeToken (over in user.js), the token is stores on req.token. We need the method to return a promise bc we're going to need to respond to the user once the token has been deleted 
+	req.user.removeToken(req.token).then(() => {
+		res.status(200).send();
+	}, () => {
+		res.status(400).send();
+		//this is going to fire if there are any errors
+	});
+});
+
 
 
 
