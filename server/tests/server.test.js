@@ -85,87 +85,86 @@ describe('GET /todos', () => {
 	});
 });
 
-describe('GET /todos/:id', () => {
-	it('should return todo doc', (done) => {
-		//this is the supertest request, requesting from the express app (as captured in var app)
-		request(app)
-			.get(`/todos/${todos[0]._id.toHexString()}`)
-			//this is saying if I input this url
-			//use a template string when you need to inject a changing value.  Here ID will differ from test to test.  We're access the todos array, we're grabbing the first item and we're looking for its _id property.  It's an ObjectID but we need to convert it into a string because that is what we are going to pass in as the url.  For that we use the toHexString method.
-			.expect(200)
-			//this is saying "i expect to get a 200 status code"
-			//use .expect to make assertions about what happens when the .get test case gets fired
-			.expect((res) => {
-				expect(res.body.todo.text).toBe(todos[0].text);
-			//this is saying I expect the body we get back from plugging in that url to match the ideal body we have above in the todos variable.  the todos var contains an array of objects and we are that we expect the first item in the array (an object) to have a text property to match the text property in the results object.
-			//this is how you make a custom assertion.  you can examine the body of what comes back by passing in the res variable and then making a fcn with whatever it is should be in the body
-			})
-			.end(done);
+// describe('GET /todos/:id', () => {
+// 	it('should return todo doc', (done) => {
+// 		//this is the supertest request, requesting from the express app (as captured in var app)
+// 		request(app)
+// 			.get(`/todos/${todos[0]._id.toHexString()}`)
+// 			//this is saying if I input this url
+// 			//use a template string when you need to inject a changing value.  Here ID will differ from test to test.  We're access the todos array, we're grabbing the first item and we're looking for its _id property.  It's an ObjectID but we need to convert it into a string because that is what we are going to pass in as the url.  For that we use the toHexString method.
+// 			.expect(200)
+// 			//this is saying "i expect to get a 200 status code"
+// 			//use .expect to make assertions about what happens when the .get test case gets fired
+// 			.expect((res) => {
+// 				expect(res.body.todo.text).toBe(todos[0].text);
+// 			//this is saying I expect the body we get back from plugging in that url to match the ideal body we have above in the todos variable.  the todos var contains an array of objects and we are that we expect the first item in the array (an object) to have a text property to match the text property in the results object.
+// 			//this is how you make a custom assertion.  you can examine the body of what comes back by passing in the res variable and then making a fcn with whatever it is should be in the body
+// 			})
+// 			.end(done);
+// 	});
 
-	});
+// 	it('should return 404 if todo not found', (done) => {
+// 		var outsideTodo = {
+// 			_id: new ObjectID(),
+// 			text: 'This todo is not in the collection'
+// 		};
+// 		request(app)
+// 			.get(`/todos/${outsideTodo._id.toHexString()}`)
+// 			.expect(404)
+// 			.end(done);
+// 	});
 
-	it('should return 404 if todo not found', (done) => {
-		var outsideTodo = {
-			_id: new ObjectID(),
-			text: 'This todo is not in the collection'
-		};
-		request(app)
-			.get(`/todos/${outsideTodo._id.toHexString()}`)
-			.expect(404)
-			.end(done);
-	});
-
-	it('should return 404 for non-object ids', (done) => {
-		request(app)
-			.get('/todos/123abc')
-			.expect(404)
-			.end(done);
-	});
-});
+// 	it('should return 404 for non-object ids', (done) => {
+// 		request(app)
+// 			.get('/todos/123abc')
+// 			.expect(404)
+// 			.end(done);
+// 	});
+// });
 
 // THE CHALLENGE: query database using findById, try to find the todo item that has the hexId.  it should fail.  youre going create that var in your then call and make sure it doesnt exist.  you can make sure something doesnt exist by using the toNotExist fcn, like expect(todo).toNotExist();
-describe('DELETE /todos/:id', () => {
-	it('should remove a todo', (done) => {
-		var hexId = todos[1]._id.toHexString();
+// describe('DELETE /todos/:id', () => {
+// 	it('should remove a todo', (done) => {
+// 		var hexId = todos[1]._id.toHexString();
 
-		request(app)
-			.delete(`/todos/${hexId}`)
-			.expect(200)
-			.expect((res) => {
-				expect(res.body.todo._id).toBe(hexId);
-			})
-			.end((err, res) => {
-				if (err) {
-					return done(err);
-				}
+// 		request(app)
+// 			.delete(`/todos/${hexId}`)
+// 			.expect(200)
+// 			.expect((res) => {
+// 				expect(res.body.todo._id).toBe(hexId);
+// 			})
+// 			.end((err, res) => {
+// 				if (err) {
+// 					return done(err);
+// 				}
 
-				Todo.findById(hexId).then((todo) => {
-					expect(todo).toNotExist();
-					done();
-				}).catch((e) => done(e));
-			})
-	});
+// 				Todo.findById(hexId).then((todo) => {
+// 					expect(todo).toNotExist();
+// 					done();
+// 				}).catch((e) => done(e));
+// 			})
+// 	});
 
-	it('should return 404 if todo not found', (done) => {
+// 	it('should return 404 if todo not found', (done) => {
 
-			var outsideTodo = {
-			_id: new ObjectID(),
-			text: 'This todo is not in the collection'
-		};
-		request(app)
-			.delete(`/todos/${outsideTodo._id.toHexString()}`)
-			.expect(404)
-			.end(done);
-	});
+// 			var outsideTodo = {
+// 			_id: new ObjectID(),
+// 			text: 'This todo is not in the collection'
+// 		};
+// 		request(app)
+// 			.delete(`/todos/${outsideTodo._id.toHexString()}`)
+// 			.expect(404)
+// 			.end(done);
+// 	});
 	
 
-	it('should return 404 if object id is invalid', (done) => {
-		request(app)
-			.get('/todos/123abc')
-			.expect(404)
-			.end(done);
-	 });
-});
+// 	it('should return 404 if object id is invalid', (done) => {
+// 		request(app)
+// 			.get('/todos/123abc')
+// 			.expect(404)
+// 			.end(done);
+// 	 });
+// });
 
 		/*/CHALLENGE INSTRUCTIONS /*/
 		//grab ID of first item
@@ -357,7 +356,37 @@ describe('POST /users/login', () => {
 			}).catch((e) => done(e));
 		});
 	});
-})
+});
+
+describe('DELETE /users/me/token', () => {
+	it('should remove auth token on logout', (done) => {
+		//DELETE /users/me/token
+		//Set x-auth equal to token
+		//200
+		//Find user, verify that tokens array has length of zero
+
+		request(app)
+		.delete('/users/me/token')
+		//this deletes the token
+		.set('x-auth', users[0].tokens[0].token) 
+		//we then need to make the request to check to see if the delete was done correctly (i.e. that the auth token was removed). when making the request we need to set the x-auth header bc the /users/me/token route is not only private but it uses the req.token as the token to delete (see app.delete in server.js).  In other words we need to pass in the same values that are being used over in the corresponding http requests in server.js.
+		.expect(200)
+		//setting expectations
+		.end((err, res) => {
+			if (err) {
+				return done(err);
+			}
+			//custom assertion, which means querying the database
+
+			User.findById(users[0]._id).then((user) => {
+				//first we are retrieving the user by id from seed.js, it reutrns the user object, then the "then" call allows us to do something when that user comes back
+				expect(user.tokens.length).toBe(0);
+				//there shouldn't be any tokens because we deleted it
+				done();
+			}).catch((e) => done(e));
+		});
+	});
+});
 
 
 
