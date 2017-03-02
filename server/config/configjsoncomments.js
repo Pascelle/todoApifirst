@@ -1,0 +1,5 @@
+//here we have key value pairs on the root object where the key is the environment and the value is an object.  here, test and dev.  Inside of the objects we can specify any local env vars.  for example in the test env we have port and mongodburi vars
+//JSON uses double quotes only
+//we also need to figure out how to get access to these objects---the port, mongodb_uri objects using the json file.  first thing is require json file.  when you require JSON it automatically parses it into a JS object.  We dont need to use json.parse to get it done.  which means we can create a var config over in config.js
+//We are adding a new enc var via JWT SECRET property (see below).  This is so that instead of having our secret right inside of seed.js and elsewhere in our code, we will just reference process.env.JWT_SECRET
+//these are environment variables

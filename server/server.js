@@ -52,15 +52,15 @@ app.post('/todos', (req, res) => {
 		res.status(400).send(e);
 	});
 
-	var secondtodo = new Todo({
-		text: req.body.text //what we entered into postman
-		});
+	// var secondtodo = new Todo({
+	// 	text: req.body.text //what we entered into postman
+	// 	});
 	
-	secondtodo.save().then((doc) => {
-		res.send(doc);
-	}, (e) => {
-		res.status(400).send(e);
-	});
+	// secondtodo.save().then((doc) => {
+	// 	res.send(doc);
+	// }, (e) => {
+	// 	res.status(400).send(e);
+	// });
 	
 	
 });
